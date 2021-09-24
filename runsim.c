@@ -7,13 +7,15 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <errno.h>
+#include <signal.h>
 
-#include  "shm-02.h"
+#define MAXCHILD 20
 
 int main(int argc, char *argv[])
 {
      key_t ShmKEY;
      pid_t childpid;
+     pid_t grandchild;
      pid_t waitreturn;
      int ShmID;
      char *ShmPTR;
@@ -27,7 +29,6 @@ int main(int argc, char *argv[])
           printf("*** shmget error (client) ***\n");
           exit(1);
      }
-     printf("   Client has received a shared memory of four integers...\n");
 
      ShmPTR = shmat(ShmID, NULL, 0);
      if ((int) ShmPTR == -1) {
@@ -36,28 +37,41 @@ int main(int argc, char *argv[])
      }
      printf("   Client has attached the shared memory...\n");
 
-     while (fgets(ShmPTR, sizeof(fp), fp) != NULL){
-     	sleep(1);
-
+    
+    while (fgets(ShmPTR, sizeof(fp), fp) != NULL) {
 	n = atoi(argv[1]);
-   for (i = 1; i < n; i++)
-      if (childpid = fork())
-         break;
-   while(childpid != (waitreturn = wait(NULL)))
-      if ((waitreturn == -1) && (errno != EINTR))
-         break;
-     }
-          fprintf(stderr, "%s\n", ShmPTR);
-  
-     printf("   Client found the data is ready...\n");
-     printf("   Client found %s in shared memory...\n",
-                ShmPTR);
+	
+   	for (i = 1; i < n; i++)
+   		childpid = fork();		
+	     if(childpid == 0) {
+	      //if (childpid != -1)
+                 printf("Waited for child with pid %ld\n", childpid);	     
+	    	  grandchild = fork();
+	       if(grandchild == 0){
+		//if (grandchild != -1)
+		execlp("testsim.c", "testsim.c", NULL);
+                 printf("Waited for grandchild with pid %ld\n", grandchild);
+	        exit(0);
+	       }		
+	     }
+	      for(i = 1; i < n; i++){
 
-   
-     printf("   Client has informed server data have been taken...\n");
+                while(wait(NULL) != -1 || errno != ECHILD);
+	      }
+		//if (childpid != -1)
+  		 //printf("Waited for child with pid %ld\n", childpid);
+		//if (grandchild != -1)
+		// printf("Waited for grandchild with pid %ld\n", grandchild);
+		
+	     	printf("Parent pid = %d\n", getpid());
+		break;
+	      	
+	
+     } 
+    
      shmdt(ShmPTR);
-     printf("   Client has detached its shared memory...\n");
-     printf("   Client exits...\n");
+ 	shmctl((int)ShmPTR, IPC_RMID,NULL);
+        kill(childpid, SIGTERM);
      exit(0);
 
      return 0;
