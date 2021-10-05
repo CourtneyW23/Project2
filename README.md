@@ -16,3 +16,5 @@ rules.
 8. Shared memory: 10 pts. Shared memory is properly allocated/deallocated and used to synchronize testsim processes.
 9. Signals: 10 pts. Code reacts to signals as specified. When the parent is terminated, all children are terminated as well, and shared memory deallocated.
 10. Conformance to specifications: 10pts. Code properly creates the log file; the log file has messages in appropriate format; and appropriate messages are displayed to screen.
+
+References and citings: https://www.csl.mtu.edu/cs4411.ck/www/NOTES/process/shm/example-2.html
